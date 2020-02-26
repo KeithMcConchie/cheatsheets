@@ -1,0 +1,119 @@
+GIT CHEAT SHEET:
+
+Check version:
+git --version
+
+# configure name and email
+git config --global user.name "Keith McConchie"
+git config --global user.email "Keith.McConchie@gmail.com"
+
+# view the settings of config variables
+git config --list
+
+# get help on a git verb here we used config as the verb
+git help config
+git config --help
+
+create a new directory controlled by git:
+mkdir git-practice
+cd git-practice
+git init
+
+Check status:
+git status
+
+Create a sample file:
+echo "practicing git" > file.txt
+
+Add the file to git:
+git add file.txt
+git commit -m "commit comment"
+
+Commit changes you made to the file:
+git add file.txt
+git commit -m "new commit comment"
+
+get the log of all your commits:
+git log
+
+# INITIALIZE A REPOSITORY FROM EXISTING CODE
+# navigate to the code directory and run
+git init
+# show all files including hidden ones
+# note the presence of .git directory 
+ls -la
+
+# create a .gitignore file - files that won't be 
+# tracked by git
+touch .gitignore
+
+# edit this and put the names or patterns of any files
+# you don't want git to track. i.e. *.pyc (pycache files)
+
+# git is broken conceptually into 3 areas
+#
+# working directory - checked out files and ignored files reside
+# here - git status shows the status of these files
+#
+# staging area - files that you want to commit to 
+# the code base
+#
+# repository - where the permanent code base is
+
+# add the gitignore to the staging area - it is not yet commited
+# to the repository
+git add .gitignore
+
+
+# add all files to the staging area - I think you would only do
+# this when initially setting up a repository - you wouldn't want 
+# to commit changes on files that didn't actually change
+git add -A
+
+# remove a file from the staging area
+git status manage.py
+
+# remove all files from the staging area
+git reset
+
+git status
+# On branch master
+# nothing to commit, working tree clean
+
+git log
+# Author: Keith McConchie <Keith.McConchie@gmail.com>
+# Date:   Thu Jan 16 15:46:48 2020 -0500
+#
+#     Initial Commit
+
+# clone a remote repository.  This example is actually on
+# the same machine, but it could be on a remote site like 
+# github.  The "." at the end means clone it into the current 
+# directory.  You could also specify a path to a different 
+# directory.
+git clone ../remote_repo.git .
+
+# get info about the remote repository that you cloned this 
+# repository from.  From within the home directorry of the cloned
+# repository:
+git remote -v
+
+# get branch info on both the local and remote repository
+git branch -a
+
+# show the differences between the local and remote repository
+# - red shows deletions
+# + green shows additions
+git diff
+
+# show the files that have been modified
+git status
+
+# specify which files you want to move to the staging area
+# in this case, all of them
+git add -A
+
+# running status again will show the files in the staging area
+# issue a commit to commit them to the local repository
+git commit -m "Added a comment to test git"
+

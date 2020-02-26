@@ -1,0 +1,666 @@
+# from ndev
+python3 -m venv django_env
+source django_env/bin/activate
+# install in a virtual environment
+
+pip install django
+
+# check to make sure what version
+# got installed
+python -m django --version
+
+# show a list of available django subcommands
+django-admin
+
+# create a new project
+django-admin startproject django_project
+
+# start the webserver - Ctrl-c to stop
+python manage.py runserver
+
+# server running at localhost
+http://127.0.0.1:8000/
+# or
+http://localhost:8000/
+
+# go to the admin page
+http://localhost:8000/admin
+
+# create a new app within the project
+python manage.py startapp blog
+
+# create a new view within the app
+# In blog/views.py:
+# add an import for django HttpResponse
+# so we can create a view function
+from django.http import HttpResponse
+
+# create the blog home view function
+def home(request):
+    return HttpResponse("<h1>Blog Home</h1>")
+
+# map url patern to view function 
+# in the blog directory create urls.py
+# open project level urls.py and copy:
+from django.urls import path
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+]
+
+# add import the view function we just made
+from . import views
+
+# fix the urlpatterns to reflect out blog home page
+path('', views.home, name='blog-home')
+
+# here's what the resultant module looks like
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+]
+
+# now edit the project level urls.py
+# add import for include function
+# add line for blog/ path
+# here's what it looks like
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('blog/', include('blog.urls')),
+]
+
+# django looks through the project level urlpatterns
+# until it finds one that matches.  It strips off the 
+# matching part (blog/) and sends the remainder (in this
+# case an empty string) to the /blog/urls.py module.
+# This urlpattern in this module maps it to the view 
+# function home() which returns an HttpResponse "Blog Home
+# wrapped in h1 tags
+# path('', views.home, name='blog-home')
+
+# USING TEMPLATES
+# create templates directory in blog
+# then create blog directory in templates (seems wacky)
+# in blog/templates/blog
+# create home.html and about.html
+# use ! then tab to create boilerplate
+# add the h1 wrapped strings to reflect Blog Home and Blog About
+<h1>Blog Home!</h1>
+<h1>Blog About!</h1>
+
+# BlogConfig is located in the blog/apps.py file
+# go to the settings.py file and add BlogConfig to 
+# top of INSTALLED_APPS
+INSTALLED_APPS = [
+    'blog/apps/BlogConfig',
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+]
+
+# in blog/views change HttpResponse to render using the templates
+# we created (we can remove the import for HttpResponse as we 
+# aren't using it anymore).
+def home(request):
+    return render(request, 'blog/home.html')
+def about(request):
+    return render(request, 'blog/about.html')
+
+# now let's create some fake posts for our blog
+# we'll ultimately be storing these posts in a database
+# but for now we'll just keep them as a list of dictionaries.
+posts = [
+    {'author': 'Keith',
+    'title': 'first post',
+    'content' 'first post content',
+    'date_posted': 'August 27, 2018'
+    },
+    {'author': 'Kevin',
+    'title': 'second post',
+    'content' 'second post content',
+    'date_posted': 'August 28, 2018'
+    }
+]
+
+# create a dictionary in our blog home view
+# and refer to it as the third argument to our
+# render function call.
+def home(request):
+    context = {
+        'posts': posts
+    }
+    return render(request, 'blog/home.html', context)
+
+# template code for the body of home.html
+# to loop through each of our dummy posts
+    {% for post in posts %}
+      <h1>{{ post.title}}</h1>
+      <p> By {{ post.author}} on {{post.date_posted}}</p>
+      <p>{{ post.content }}</p>
+    {% endfor %}
+
+# TEMPLATE INHERITANCE
+# Create a file called base.html in blogs/template blogs
+# and place all common html from home and about in it
+# then create a surrounding block with {%%} marking 
+# where the html unique to the inheriting files will be
+# placed.  We will call this content but I'm pretty sure 
+# it can have any legal name, as it must be possible to have 
+# multiple inheritance blocks.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    {% if title %}
+      <title>Django Blog - {{ title }} </title>
+    {% else %}
+      <title>Django Blog</title>
+    {% endif %}
+</head>
+<body>
+    {% block content %}{% endblock %}
+</body>
+</html>
+
+# Then in home and about html, we will specify the template we are 
+# inheriting from and wrap the unique parts of each in a block with 
+# the same name
+# for home.html
+{% extends "blog/base.html" %}
+{% block content %}
+    {% for post in posts %}
+      <h1>{{ post.title}}</h1>
+      <p> By {{ post.author}} on {{post.date_posted}}</p>
+      <p>{{ post.content }}</p>
+    {% endfor %}
+{% endblock content %}
+
+# for about.html
+{% extends "blog/base.html" %}
+{% block content %}
+    <h1>About Page</h1>
+{% endblock content %}
+
+# using Bootstrap for formatting
+# make sure these three lines are in your base.html head
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+# and make sure these are at the bottom of your base.html body
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+# and wrap the content block in base.html with a div block
+# referencing the Bootstrap container class
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+
+# let's do some more elaborate formatting with bootstrap
+# the html/css is at this location
+# https://github.com/CoreyMSchafer/code_snippets/tree/master/Django_Blog/snippets
+
+# add a navigation bar
+# paste contents of snippets/navigation.html to the top of the body section of base.html
+
+# replace div block in the body section of base.html with the contents of snippets/main.html
+
+# create a directory in blog called static then create a directory under that called
+# blog, so that you now have blog/static/blog.
+# create a new file called main.css in blog/static/blog.
+# paste the contents of snippets/main.css into your local main.css
+
+# We need to load the static files.  At top of base.html place this code block
+{% load static %}
+
+# now create a link to the css file. Put it with the other link in base.html
+    <link rel="stylesheet" type="text/css" href="{% static 'blog/main.css' %}">
+
+# replace the contents of the for loop in home.html with contents of snippets/article.html
+
+# in the base.html, in the nav section there are three href tags that reference 
+# url patterns, we are going to replace them with the name that is mapped to the pattern
+# in the urlpatterns list of the urls.py file. 
+#
+
+# Creating the admin page
+# define a super user - first create the database
+python manage.py makemigrations
+python manage.py migrate
+python manage.py createsuperuser
+#User Keith
+# email
+# pwd testing321
+
+# blog/models.py 
+from django.db import models
+from django.utils import timezone
+from django.contrib.auth.models import User
+
+class Post(models.Model):
+    title = models.CharField(max_length=100)
+    content = models.TextField()
+    date_posted = models.DateTimeField(default=timezone.now)
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+
+# run makemigrations to create python object/sql mappings
+python manage.py makemigrations
+
+#Migrations for 'blog':
+#  blog/migrations/0001_initial.py
+#    - Create model Post
+
+# view the SQLLite code
+python manage.py sqlmigrate blog 0001
+
+#run migrate to apply changes to db
+python manage.py migrate
+
+#pull up a special django version of python shell
+python manage.py shell
+
+# import the data models
+from blog.models import Post
+from django.contrib.auth.models import User
+
+# look at the User table as a QuerySet
+User.objects.all()
+
+# first item as a User item (not a QuerySet)
+User.objects.first()
+
+# last item as a User item (not a QuerySet)
+User.objects.last()
+
+# apply a filter. username is unique but if 
+# we picked a non-unique field we could get more 
+# than one back.  filter therefore returns a QuerySet
+User.objects.filter(username='keith')
+
+# but we can slap first() on it to get a User object
+User.objects.filter(username='keith').first()
+
+# assign it to a variable
+user = User.objects.filter(username='keith').first()
+user
+#<User: keith>
+
+# use . notation to get attributes of the User object
+user.id
+#1
+user.name
+#'keith
+
+# pk returns the primary key, which in this case is the id
+user.pk
+#1
+
+# get a user object from the collection using a specific value
+# of a field
+user = User.objects.get(id=1)
+#<User: keith>
+
+# the Post.objects should be empty
+Post.objects.all()
+#<QuerySet []>
+
+# create a Post object
+post_1 = Post(title='Blog 1', content='First Post Content!', author=user)
+
+# creating object does not add to the database
+# Post.objects is still empty
+Post.objects.all()
+#<QuerySet []>
+
+# save it to add to the database
+post_1.save()
+
+# now we get a QuerySet with one item
+Post.objects.all()
+#<QuerySet [<Post: Post object (1)>]>
+
+# add a __str__ method to our Post model
+    def __str__(self):
+        return self.title
+# need to quit and restart the shell for the change to
+# take hold
+
+# now lets add another post
+user = User.objects.filter(username='keith').first()
+post_2 = Post(title='Blog 2', content='Second Post Content!', author_id=user.id)
+post_2.save()
+
+# now when we query the objects it uses __str__ to display the objects in the QuerySet
+Post.objects.all()
+#<QuerySet [<Post: Blog 1>, <Post: Blog 2>]>
+
+# get the first Post object
+post = Post.objects.all().first()
+
+# examine its attributes
+post.date_posted
+# datetime.datetime(2020, 2, 13, 19, 29, 47, 980084, tzinfo=<UTC>)
+post.author
+#<User: keith>
+
+# author is an object, so we can examine its attributes, too.
+post.author.username
+# 'keith'
+post.author.email
+# 'Keith.McConchie@gmail.com'
+
+# get all posts associated with a user object
+>>> user.post_set.all()
+<QuerySet [<Post: Blog 1>, <Post: Blog 2>]>
+
+# create another post for the user object and add it to the db
+user.post_set.create(title='Blog 3', content='Third Post Content')
+# <Post: Blog 3>
+user.post_set.all()
+#<QuerySet [<Post: Blog 1>, <Post: Blog 2>, <Post: Blog 3>]>
+
+# in home html, change the date format
+<small class="text-muted">{{ post.date_posted|date:"F d, Y" }}</small>
+
+# register the Post model with the admin page.  This will give an interface
+# which will allow you to easily create and alter entries
+# in admin.py
+from .models import Post
+admin.site.register(Post)
+
+# CREATING A USERS APP SO NEW USERS CAN REGISTER
+python manage.py startapp users
+
+# in users/apps.py there is a class for our app
+class UsersConfig(AppConfig):
+    name = 'users'
+
+# we need to register it as an installed app in the django_project/settings.py file
+INSTALLED_APPS = [
+    'blog.apps.BlogConfig',
+    'users.apps.UsersConfig', 
+	...
+
+# Now lets create a view.  In users/views.py:
+from django.contrib.auth.forms import UserCreationForm
+
+def register(request):
+    form = UserCreationForm()
+    return render(request, 'users/register.html', {'form': form})
+
+# render takes a request an html template and a context dictionary
+# the context dictionary is created in the form object
+# now we need to create the html template
+# in users/ we need to create a templates directory
+# then in users/templates, we create a users directory
+# so we wind up with users/templates/users
+# where we create register.html
+{% extends "blog/base.html" %}
+{% block content %}
+    <div class="content-section">
+        <form method="POST">
+            {% csrf_token %}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">Join Today</legend>
+                {{ form.as_p }}
+            </fieldset>
+            <div class="form-group">
+                <button class="btn btn-outline-info" type="submit">Sign Up</button>
+            </div>
+        </form>
+        <div class="border-top pt-3">
+            <small class="text-muted">
+                Already Have An Account? <a class="ml-2" href="#">Sign In</a>
+            </small>
+        </div>
+    </div>>  
+{% endblock content %}
+
+# rather than creating a urls file in users we will just import them into
+# the project urls
+from django.contrib import admin
+from django.urls import path, include
+from users import views as user_views
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('register/', user_views.register, name='register'),
+    path('', include('blog.urls')),
+]
+
+# modify the view to do validation and messages
+from django.shortcuts import render, redirect
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib import messages
+
+def register(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            messages.success(request, f'Account created form {username}!')
+            return redirect('blog-home')
+    else:
+        form = UserCreationForm()
+
+    return render(request, 'users/register.html', {'form': form})
+
+# modify the base template to display flash messages immediately 
+# preceding the content block
+            {% if messages %}
+              {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                  {{ message }}
+                </div>
+              {% endfor %}
+            {% endif %}
+
+# modify the view to save the user
+        if form.is_valid():
+            form.save()
+
+# add email field to user registration form
+# create a forms.py file in users/
+
+from django import forms
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
+
+class UserRegisterForm(UserCreationForm):
+    email = forms.EmailField()
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password1', 'password2']
+
+# in views, import the new form UserRegisterForm and use it instead of UserCreationForm
+
+# use crispy forms 
+# in settings
+INSTALLED_APPS = [
+    'blog.apps.BlogConfig',
+    'users.apps.UsersConfig', 
+    'crispy_forms',
+
+# and at the bottom
+CRISPY_TEMPLATE_PACK = "bootstrap4"
+
+# in register.html at top
+{% extends "blog/base.html" %}
+{% load crispy_forms_tags %}
+
+#change {{ form|as_p }} to {{ form|crispy }}
+
+# add login/logout
+# import views in urls.py
+from django.contrib.auth import views as auth_views
+
+# and add the url patterns
+urlpatterns = [
+    path('login/', auth_views.LoginView.as_view(template_name='users/login.html'), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(template_name='users/logout.html'), name='logout'),
+]
+
+# create login.html
+{% extends "blog/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <div class="content-section">
+        <form method="POST">
+            {% csrf_token %}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">Log In</legend>
+                {{ form|crispy }}
+            </fieldset>
+            <div class="form-group">
+                <button class="btn btn-outline-info" type="submit">Login</button>
+            </div>
+        </form>
+        <div class="border-top pt-3">
+            <small class="text-muted">
+                Need An Account? <a class="ml-2" href="{% url 'register' %}">Sign Up Now</a>
+            </small>
+        </div>
+    </div>>  
+{% endblock content %}
+
+# create logout.html
+{% extends "blog/base.html" %}
+{% block content %}
+    <h2>You have been logged out.</h2>
+    <div class="border-top pt-3">
+        <small class="text-muted">
+            <a href="{% url 'login' %}">Log In Again</a>
+        </small>
+    </div>
+{% endblock content %}
+
+# make a profile page
+# add to views.py
+def profile(request):
+    return render(request, 'user/profile.html')
+
+# add the pattern to urls.py
+    path('profile/', user_views.register, name='profile'),
+
+# add to settings.py at bottom
+LOGIN_REDIRECT_URL = 'blog-home'
+LOGIN_URL = 'login'
+
+# add profile for user
+# in users/models.py
+from django.db import models
+from django.contrib.auth.models import User
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    image = models.ImageField(default='default.jpg', upload_to='profile_pics')
+    def __str__(self):
+        return f'{self.user.username} Profile'
+
+# we are working with image files so we need to install Pillow
+# (make sure we are in the venv for the project)
+pip install Pillow
+
+# and we've made changes to the database so we need to run makemigrations
+python manage.py makemigrations
+
+# and then apply the changes to the database
+python manage.py migrate
+
+# in order to be able to edit profiles on the admin page
+# we need to register the model with the admin page
+# in users/admin.py
+from django.contrib import admin
+from .models import Profile
+
+admin.site.register(Profile)
+
+# use the admin page to create two profiles one each for keith and TestUser.  Give keith a 
+# pic and don't give one for TestUser
+
+# this is going to create a directory at the project level called profile_pics and deposit
+# the profile pic files in there.  This is not necessarily what we want.
+# we need to create a place to put all our media files
+# at the bottom of settings.py
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
+
+# delete the profiles we already created and recreate them using the admin page
+# the file will be stored in the new location
+
+# replace content block in profile.html
+    <div class="content-section">
+        <div class="media">
+        <img class="rounded-circle account-img" src="{{ user.profile.image.url }}">
+        <div class="media-body">
+            <h2 class="account-heading">{{ user.username }}</h2>
+            <p class="text-secondary">{{ user.email }}</p>
+        </div>
+        </div>
+        <!-- FORM HERE -->
+    </div>
+
+# add these two imports and use the following statement to extend url patterns in urls.py
+from django.conf import settings
+from django.conf.urls.static import static
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# drop a default.jpg in the media folder.  Users will get this file if they don't specify their own pic.
+
+# we want a profile to be created when we create a user
+# create users/signals.py
+from django.db.models.signals import post_save
+from django.contrib.auth.models import User
+from django.dispatch import receiver
+from .models import Profile
+
+@receiver(post_save, sender=User)
+def create_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_profile(sender, instance, **kwargs):
+
+# in users/apps.py add function to UserConfig class
+    def ready(self):s
+        import users.signals
+
+# in forms.py
+from .models import Profile
+
+# create 2 new classes
+class UserUpdateForm(forms.ModelForm):
+    email = forms.EmailField()
+
+    class Meta:
+        model = User
+        fields = ['username', 'email']
+
+class ProfileUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ['image']
+
+
+    instance.profile.save()
+
+
+
